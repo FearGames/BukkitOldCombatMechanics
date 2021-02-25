@@ -38,6 +38,7 @@ public class NameListVersionedMaterial implements VersionedMaterial {
                 return new NameListVersionedMaterial(material);
             }
 
+            // FIXME: this class is unused atm, but this call won't work in 1.12, adding this annotation just as a reminder
             material = Material.matchMaterial(name, true);
             if(material != null){
                 return new NameListVersionedMaterial(material);

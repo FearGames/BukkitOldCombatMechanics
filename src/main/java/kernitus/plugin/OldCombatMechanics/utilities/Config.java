@@ -13,6 +13,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -69,9 +71,27 @@ public class Config {
         // Load all interactive blocks (used by sword blocking and elytra modules)
         reloadInteractiveBlocks();
 
+        for (Module module : ModuleLoader.getModules()) {
+            if (module.isCustomIsEnabled()) {
+                continue;
+            }
+
+            String sectionName = module.getConfigName();
+            boolean isBlacklist = config.getBoolean("worlds-is-blacklist");
+
+            ConfigurationSection section = config.getConfigurationSection(sectionName);
+
+            if (section == null) {
+                plugin.getLogger().warning("Tried to check module '" + sectionName + "', but it didn't exist!");
+                continue;
+            }
+
+            module.setEnabled(section.getBoolean("enabled"), section.getStringList("worlds"), isBlacklist);
+        }
+
         //Set EntityDamagedByEntityListener to enabled if either of these modules is enabled
         EntityDamageByEntityListener.getINSTANCE().setEnabled(
-                moduleEnabled("old-tool-damage") || moduleEnabled("old-potion-effects"));
+                ModuleLoader.getModule("old-tool-damage").isEnabled()|| ModuleLoader.getModule("old-potion-effects").isEnabled());
 
         // Dynamically registers / unregisters all event listeners for optimal performance!
         ModuleLoader.toggleModules();
@@ -89,6 +109,8 @@ public class Config {
     }
 
     public static boolean moduleEnabled(String name, World world) {
+        return ModuleLoader.getModule(name).isEnabled(world);
+        /*
         boolean isBlacklist = config.getBoolean("worlds-is-blacklist");
         ConfigurationSection section = config.getConfigurationSection(name);
 
@@ -108,6 +130,7 @@ public class Config {
 
         boolean isInList = list.stream().anyMatch(entry -> entry.equalsIgnoreCase(worldName));
         return isBlacklist != isInList;
+        */
     }
 
     public static boolean moduleEnabled(String name) {
@@ -115,7 +138,7 @@ public class Config {
     }
 
     public static boolean debugEnabled() {
-        return moduleEnabled("debug", null);
+        return config.getBoolean("debug.enabled");
     }
 
     public static List<?> getWorlds(String moduleName) {

@@ -23,6 +23,7 @@ public class ModuleFishingRodVelocity extends Module {
 
     private Random random;
     private boolean hasDifferentGravity;
+    private boolean hasIsInWater;
     private Method getHook;
 
     public ModuleFishingRodVelocity(OCMMain plugin) {
@@ -36,6 +37,7 @@ public class ModuleFishingRodVelocity extends Module {
 
         // Versions 1.14+ have different gravity than previous versions
         hasDifferentGravity = Reflector.versionIsNewerOrEqualAs(1, 14, 0);
+        hasIsInWater = Reflector.versionIsNewerOrEqualAs(1, 13, 0);
 
         // Reflection because in 1.12- this method returns the Fish class, which was renamed to FishHook in 1.13+
         getHook = Reflector.getMethod(PlayerFishEvent.class, "getHook");
@@ -80,8 +82,13 @@ public class ModuleFishingRodVelocity extends Module {
             public void run() {
                 if (!fishHook.isValid() || fishHook.isOnGround()) cancel();
 
+                boolean inWater = false;
+                if (hasIsInWater) {
+                    inWater = fishHook.isInWater();
+                }
+
                 // We check both conditions as sometimes it's underwater but in seagrass, or when bobbing not underwater but the material is water
-                if (!fishHook.isInWater() && fishHook.getWorld().getBlockAt(fishHook.getLocation()).getType() != Material.WATER) {
+                if (!inWater && fishHook.getWorld().getBlockAt(fishHook.getLocation()).getType() != Material.WATER) {
                     final Vector fVelocity = fishHook.getVelocity();
                     fVelocity.setY(fVelocity.getY() - 0.01);
                     fishHook.setVelocity(fVelocity);

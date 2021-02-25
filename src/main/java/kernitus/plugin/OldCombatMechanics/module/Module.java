@@ -9,6 +9,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.Listener;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 /**
  * A module providing some specific functionality, e.g. restoring fishing rod knockback.
  */
@@ -18,6 +23,11 @@ public abstract class Module implements Listener {
 
     private final String configName;
     private final String moduleName;
+    private final boolean customIsEnabled;
+
+    private boolean enabled;
+    private Set<String> worlds;
+    private boolean worldsIsBlacklist;
 
     /**
      * Creates a new module.
@@ -25,10 +35,30 @@ public abstract class Module implements Listener {
      * @param plugin     the plugin instance
      * @param configName the name of the module in the config
      */
-    protected Module(OCMMain plugin, String configName){
+    protected Module(OCMMain plugin, String configName, boolean customIsEnabled){
         this.plugin = plugin;
         this.configName = configName;
         this.moduleName = getClass().getSimpleName();
+        this.customIsEnabled = customIsEnabled;
+    }
+
+
+    protected Module(OCMMain plugin, String configName){
+        this(plugin, configName, false);
+    }
+
+    public String getConfigName() {
+        return configName;
+    }
+
+    public boolean isCustomIsEnabled() {
+        return customIsEnabled;
+    }
+
+    public void setEnabled(boolean enabled, Collection<String> worlds, boolean worldsIsBlacklist) {
+        this.enabled = enabled;
+        this.worlds = new HashSet<>(worlds);
+        this.worldsIsBlacklist = worldsIsBlacklist;
     }
 
     /**
@@ -38,7 +68,22 @@ public abstract class Module implements Listener {
      * @return true if the module is enabled in that world
      */
     public boolean isEnabled(World world){
-        return Config.moduleEnabled(configName, world);
+        if (!enabled) return false;
+        if (world == null) return true;
+
+        final String worldName = world.getName();
+
+        // If the list is empty, the module should be enabled in all worlds
+        if (worlds.size() <= 0) return true;
+
+        boolean isInList = false;
+        for (String entry : worlds) {
+            if (entry.equalsIgnoreCase(worldName)) {
+                isInList = true;
+                break;
+            }
+        }
+        return worldsIsBlacklist != isInList;
     }
 
     /**

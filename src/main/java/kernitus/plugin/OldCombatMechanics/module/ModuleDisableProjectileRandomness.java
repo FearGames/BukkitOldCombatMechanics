@@ -45,10 +45,10 @@ public class ModuleDisableProjectileRandomness extends Module {
             // The vector is rotated around the Y axis and matched by checking only the X and Z values
             // Angles is specified in radians, where 10° = 0.17 radians
             if(!fuzzyVectorEquals(projectileDirection, playerDirection)) { // If the projectile is not going straight
-                if (fuzzyVectorEquals(projectileDirection, playerDirection.rotateAroundY(0.17))) {
+                if (fuzzyVectorEquals(projectileDirection, rotateAroundY(playerDirection, 0.17))) {
                     debug("10° Offset", player);
                 }
-                else if (fuzzyVectorEquals(projectileDirection, playerDirection.rotateAroundY(-0.35)))
+                else if (fuzzyVectorEquals(projectileDirection, rotateAroundY(playerDirection, -0.35)))
                     //arrowVelocity.rotateAroundY(-10);
                     debug("-10° Offset", player);
             }
@@ -56,6 +56,16 @@ public class ModuleDisableProjectileRandomness extends Module {
             playerDirection.multiply(originalMagnitude);
             projectile.setVelocity(playerDirection);
         }
+    }
+
+    // Since the API method was introduced after 1.13.2, we have to implement it here
+    private static Vector rotateAroundY(Vector vector, double angle) {
+        double angleCos = Math.cos(angle);
+        double angleSin = Math.sin(angle);
+
+        double x = angleCos * vector.getX() + angleSin * vector.getZ();
+        double z = -angleSin * vector.getX() + angleCos * vector.getZ();
+        return vector.setX(x).setZ(z);
     }
 
     private boolean fuzzyVectorEquals(Vector a, Vector b){

@@ -13,7 +13,7 @@ public class EntityDamageByEntityListener extends Module {
     private boolean enabled;
 
     public EntityDamageByEntityListener(OCMMain plugin){
-        super(plugin, "entity-damage-listener");
+        super(plugin, "entity-damage-listener", true);
         INSTANCE = this;
     }
 
